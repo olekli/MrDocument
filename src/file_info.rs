@@ -9,7 +9,7 @@ use tokio::process::Command;
 use tokio_stream::wrappers::LinesStream;
 use tokio_stream::StreamExt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum FileInfo {
     PDF(PathBuf),
     PNG(PathBuf),

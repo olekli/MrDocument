@@ -42,6 +42,9 @@ pub enum Error {
     #[error("RedirectIOError")]
     RedirectIOError,
 
+    #[error("Not a valid PDF")]
+    NotValidPdfError,
+
     #[error("Cannot convert PDF: {0}")]
     PdfConversionError(String),
 

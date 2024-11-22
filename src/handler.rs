@@ -1,11 +1,12 @@
-use crate::error::{Result};
-use crate::file_info::FileInfo;
+use crate::error::{Result, Error};
 use crate::chatgpt::query_ai;
 use crate::pdf::update_metadata;
-use crate::paths::{Location, FileObject};
+use crate::file::{Location, FileObject};
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
 use std::io::Write;
+use tokio::time::{sleep, Duration};
+use crate::file_info::FileInfo;
 
 pub async fn handle_file(mut file: FileObject) {
     match handle_file_transit(&mut file).await {
@@ -16,6 +17,19 @@ pub async fn handle_file(mut file: FileObject) {
             log::error!("Unable to process file: {:?}: {}", file, err);
         }
     }
+}
+
+async fn wait_for_document(file: &FileObject) -> Result<()> {
+    let mut i = 6;
+    while let Err(_) = lopdf::Document::load(file.get_path()).await {
+        log::info!("waiting for document to become ready: {file:?}");
+        sleep(Duration::from_secs(10)).await;
+        i = i - 1;
+        if i == 0 {
+            return Err(Error::NotValidPdfError);
+        }
+    }
+    Ok(())
 }
 
 async fn handle_file_transit(file: &mut FileObject) -> Result<()> {
@@ -31,9 +45,12 @@ async fn handle_file_transit(file: &mut FileObject) -> Result<()> {
 }
 
 async fn handle_file_processing(file: &mut FileObject) -> Result<()> {
-    file.rename(Location::Transit).await?;
+    sleep(Duration::from_secs(1)).await;
 
     let file_info = FileInfo::new(file.get_path())?;
+    wait_for_document(file).await?;
+    file.rename(Location::Transit).await?;
+
     let document_data = query_ai(file_info).await?;
     let dst_file_name_pdf = format!("{}-{}.pdf", document_data.date.clone(), document_data.title.clone());
     let dst_path_pdf = file.make_path_with_new_filename(Location::Outbox, dst_file_name_pdf);

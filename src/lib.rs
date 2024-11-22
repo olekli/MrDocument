@@ -5,4 +5,4 @@ pub mod document;
 pub mod file_info;
 pub mod handler;
 pub mod pdf;
-pub mod paths;
+pub mod file;

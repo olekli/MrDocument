@@ -1,6 +1,6 @@
 use mrdocument::watcher::{Watcher, WatcherEvent};
 use mrdocument::error::{Result, Error};
-use mrdocument::paths::{Paths, Location, FileObject};
+use mrdocument::file::{Paths, Location, FileObject};
 use env_logger;
 use env_logger::{Builder, Env};
 use clap::Parser;
