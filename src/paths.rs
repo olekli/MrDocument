@@ -17,6 +17,7 @@ impl fmt::Display for Location {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Paths {
     path: PathBuf,
 }

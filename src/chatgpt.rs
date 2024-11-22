@@ -15,7 +15,7 @@ use std::env;
 pub async fn query_ai(file_info: FileInfo) -> Result<DocumentData> {
     log::info!("Received {file_info:?}");
     let api_key = env::var("OPENAI_API_KEY").unwrap().to_string();
-    let client = OpenAIClient::builder().with_api_key(api_key).build()?;
+    let client = OpenAIClient::builder().with_api_key(api_key).build().map_err(|_| Error::NoApiKeyError)?;
     let files: Vec<String> = file_info
         .base64()
         .await?

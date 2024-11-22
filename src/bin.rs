@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
                 match event {
                     WatcherEvent::Paths(observed_paths) => {
                         for path in observed_paths {
-                            handle_file(&paths, path.clone().into()).await;
+                            tokio::spawn(handle_file(paths.clone(), path.into()));
                         }
                     }
                     WatcherEvent::Quit => {

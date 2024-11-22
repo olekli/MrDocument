@@ -8,8 +8,8 @@ use tokio::fs;
 use tokio::io::AsyncWriteExt;
 use std::io::Write;
 
-pub async fn handle_file(paths: &Paths, path: PathBuf) {
-    match handle_file_transit(paths, path.clone()).await {
+pub async fn handle_file(paths: Paths, path: PathBuf) {
+    match handle_file_transit(&paths, path.clone()).await {
         Ok(_) => {
             log::info!("Processed {:?}", path);
         }

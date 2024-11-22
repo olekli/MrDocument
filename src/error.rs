@@ -18,9 +18,6 @@ pub enum Error {
     #[error("No API key provided")]
     NoApiKeyError,
 
-    #[error("Some error: {0:?}")]
-    SomeError(#[from] Box<dyn std::error::Error>),
-
     #[error("Api error: {0:?}")]
     ApiError(#[from] openai_api_rs::v1::error::APIError),
 
