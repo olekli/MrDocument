@@ -1,20 +1,20 @@
 use mrdocument::watcher::{Watcher, WatcherEvent};
 use mrdocument::error::{Result, Error};
+use mrdocument::paths::{Paths, Location};
 use env_logger;
 use env_logger::{Builder, Env};
 use clap::Parser;
 use tokio_stream::StreamExt;
-use mrdocument::handler::handle_new_file;
+use mrdocument::handler::handle_file;
 use std::env;
+use std::path::PathBuf;
+use tokio::fs::create_dir_all;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(long)]
-    inbox_path: String,
-
-    #[arg(long)]
-    outbox_path: String,
+    #[arg()]
+    path: String,
 }
 
 #[tokio::main]
@@ -24,21 +24,23 @@ async fn main() -> Result<()> {
     env::var("OPENAI_API_KEY").map_err(|_| Error::NoApiKeyError)?;
 
     let args = Cli::parse();
-    log::info!("Watching inbox {:?}", args.inbox_path);
-    log::info!("Writing to outbox {:?}", args.outbox_path);
-    let mut watcher = Watcher::new(args.inbox_path.into())?;
+    let path = PathBuf::from(args.path.clone()).canonicalize()?;
+    let paths = Paths::new(path.clone());
+    log::info!("Operating on {:?}", path);
+    create_dir_all(paths.make_root(Location::Inbox)).await?;
+    create_dir_all(paths.make_root(Location::Outbox)).await?;
+    create_dir_all(paths.make_root(Location::Transit)).await?;
+    create_dir_all(paths.make_root(Location::Processed)).await?;
+    create_dir_all(paths.make_root(Location::Error)).await?;
+
+    let mut watcher = Watcher::new(paths.make_root(Location::Inbox))?;
     loop {
         match watcher.queue.next().await {
             Some(event) => {
                 match event {
-                    WatcherEvent::Paths(paths) => {
-                        for path in paths {
-                            match handle_new_file(path.clone().into(), args.outbox_path.clone().into()).await {
-                                Err(err) => {
-                                    log::error!("Error handling file {path:?}: {err}");
-                                }
-                                _ => {}
-                            }
+                    WatcherEvent::Paths(observed_paths) => {
+                        for path in observed_paths {
+                            handle_file(&paths, path.clone().into()).await;
                         }
                     }
                     WatcherEvent::Quit => {

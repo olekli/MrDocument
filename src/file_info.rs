@@ -84,7 +84,7 @@ impl FileInfo {
             let stderr = LinesStream::new(
                 BufReader::new(output.stderr.take().ok_or(Error::RedirectIOError)?).lines(),
             );
-            let mut out_stream = StreamExt::merge(stdout, stderr);
+            let out_stream = StreamExt::merge(stdout, stderr);
 
             let status = output.wait().await?;
             if !status.success() {
