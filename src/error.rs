@@ -1,3 +1,6 @@
+use std::path::PathBuf;
+use openai_api_rs::v1::chat_completion::ChatCompletionResponse;
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("IO error: {0}")]
@@ -6,8 +9,44 @@ pub enum Error {
     #[error("Notify error: {0}")]
     NotifyError(#[from] notify::Error),
 
+    #[error("Serde error: {0}")]
+    SerdeError(#[from] serde_json::Error),
+
     #[error("Stream closed")]
     StreamClosedError,
+
+    #[error("No API key provided")]
+    NoApiKeyError,
+
+    #[error("Some error: {0:?}")]
+    SomeError(#[from] Box<dyn std::error::Error>),
+
+    #[error("Api error: {0:?}")]
+    ApiError(#[from] openai_api_rs::v1::error::APIError),
+
+    #[error("Document cannot be processed: {0:?}")]
+    DoesNotProcessError(Option<ChatCompletionResponse>),
+
+    #[error("File type not supported: {0:?}")]
+    UnsupportedFileTypeError(PathBuf),
+
+    #[error("Unexpected: {0}")]
+    UnexpectedError(String),
+
+    #[error("EncodingError")]
+    EncodingError,
+
+    #[error("Error reading metadata: {0}")]
+    MetadataInError(String),
+
+    #[error("Error writing metadata: {0}")]
+    MetadataOutError(String),
+
+    #[error("RedirectIOError")]
+    RedirectIOError,
+
+    #[error("Cannot convert PDF: {0}")]
+    PdfConversionError(String),
 
     #[error("Other error: {0}")]
     Other(String),
