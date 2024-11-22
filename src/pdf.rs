@@ -13,7 +13,7 @@ fn make_metdata_entry(key: String, value: String) -> Vec<String> {
     ]
 }
 
-pub async fn update_metadata(src: PathBuf, dst: PathBuf, document_data: DocumentData) -> Result<Vec<()>> {
+pub async fn update_metadata(src: PathBuf, dst: PathBuf, document_data: &DocumentData) -> Result<Vec<()>> {
     log::info!("Updating metadata {src:?}");
     let mut process_in = Command::new("pdftk")
         .arg(src.clone())
@@ -46,7 +46,7 @@ pub async fn update_metadata(src: PathBuf, dst: PathBuf, document_data: Document
     let updated = data
         + &vec![make_metdata_entry(
             "Keywords".to_string(),
-            document_data.keywords.join(", "),
+            document_data.keywords.clone().join(", "),
         )]
         .into_iter()
         .flatten()
@@ -91,6 +91,6 @@ mod tests {
             keywords: vec!["key1".to_string(), "key2".to_string(), "foo".to_string()],
             content: "foobar".to_string(),
         };
-        update_metadata(PathBuf::from("files/example.pdf"), tmp.path().join("example-mod.pdf"), document_data).await.unwrap();
+        update_metadata(PathBuf::from("files/example.pdf"), tmp.path().join("example-mod.pdf"), &document_data).await.unwrap();
     }
 }

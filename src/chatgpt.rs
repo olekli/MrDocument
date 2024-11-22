@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::env;
 
 pub async fn query_ai(file_info: FileInfo) -> Result<DocumentData> {
-    log::info!("received {file_info:?}");
+    log::info!("Received {file_info:?}");
     let api_key = env::var("OPENAI_API_KEY").unwrap().to_string();
     let client = OpenAIClient::builder().with_api_key(api_key).build()?;
     let files: Vec<String> = file_info
@@ -104,7 +104,7 @@ pub async fn query_ai(file_info: FileInfo) -> Result<DocumentData> {
     let req = ChatCompletionRequest::new(GPT4_O.to_string(), messages)
         .tools(tools)
         .tool_choice(ToolChoiceType::Required);
-    log::info!("sending {file_info:?}");
+    log::info!("Sending {file_info:?}");
     let response = client.chat_completion(req).await?;
     let result_value: Result<serde_json::Value> = (|| {
         Ok(serde_json::from_str(
