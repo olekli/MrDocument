@@ -9,6 +9,7 @@ use tokio::time::{sleep, Duration};
 use crate::file_info::FileInfo;
 
 pub async fn handle_file(mut file: FileObject) {
+    log::info!("Processing {file:?}");
     match handle_file_transit(&mut file).await {
         Ok(_) => {
             log::info!("Processed {:?}", file);
@@ -45,6 +46,7 @@ async fn handle_file_transit(file: &mut FileObject) -> Result<()> {
 }
 
 async fn handle_file_processing(file: &mut FileObject) -> Result<()> {
+    log::debug!("Waiting for file");
     sleep(Duration::from_secs(1)).await;
 
     let file_info = FileInfo::new(file.get_path())?;

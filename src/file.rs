@@ -64,6 +64,7 @@ impl FileObject {
     }
 
     pub async fn rename(&mut self, location: Location) -> Result<()> {
+        log::debug!("Moving {self:?} to {location:?}");
         let src = self.get_path();
         let dst = self.make_path(location);
         fs::rename(src, dst).await?;

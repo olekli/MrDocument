@@ -40,6 +40,7 @@ async fn main() -> Result<()> {
                 match event {
                     WatcherEvent::Paths(observed_paths) => {
                         for path in observed_paths {
+                            log::debug!("Found new file: {:?}", path);
                             tokio::spawn(handle_file(FileObject::new(paths.clone(), path)?));
                         }
                     }
