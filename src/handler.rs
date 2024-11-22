@@ -2,52 +2,51 @@ use crate::error::{Result};
 use crate::file_info::FileInfo;
 use crate::chatgpt::query_ai;
 use crate::pdf::update_metadata;
-use std::path::PathBuf;
-use crate::paths::{Paths, Location};
+use crate::paths::{Location, FileObject};
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
 use std::io::Write;
 
-pub async fn handle_file(paths: Paths, path: PathBuf) {
-    match handle_file_transit(&paths, path.clone()).await {
+pub async fn handle_file(mut file: FileObject) {
+    match handle_file_transit(&mut file).await {
         Ok(_) => {
-            log::info!("Processed {:?}", path);
+            log::info!("Processed {:?}", file);
         }
         Err(err) => {
-            log::error!("Unable to process file: {:?}: {}", path, err);
+            log::error!("Unable to process file: {:?}: {}", file, err);
         }
     }
 }
 
-async fn handle_file_transit(paths: &Paths, path: PathBuf) -> Result<()> {
-    match handle_file_processing(paths, path.clone()).await {
+async fn handle_file_transit(file: &mut FileObject) -> Result<()> {
+    match handle_file_processing(file).await {
         Ok(_) => Ok(()),
         Err(err) => {
-            let error_path = paths.make_path(Location::Error, path.clone())?;
-            if let Err(err) = fs::rename(path.clone(), error_path).await {
-                log::error!("Unable to move file to error location: {:?}: {}", path, err);
+            if let Err(err) = file.rename(Location::Error).await {
+                log::error!("Unable to move file to error location: {:?}: {}", file, err);
             }
             Err(err)
         }
     }
 }
 
-async fn handle_file_processing(paths: &Paths, path: PathBuf) -> Result<()> {
-    let transit_path = paths.make_path(Location::Transit, path.clone())?;
-    fs::rename(path, transit_path.clone()).await?;
-    let file_info = FileInfo::new(transit_path.clone())?;
-    let document_data = query_ai(file_info).await?;
-    let dst_file_name_pdf = PathBuf::from(format!("{}-{}.pdf", document_data.date.clone(), document_data.title.clone()));
-    let dst_path_pdf = paths.make_path(Location::Outbox, dst_file_name_pdf)?;
-    update_metadata(transit_path.clone(), dst_path_pdf, &document_data).await.map(|_| ())?;
-    fs::rename(transit_path.clone(), paths.make_path(Location::Processed, transit_path)?).await?;
+async fn handle_file_processing(file: &mut FileObject) -> Result<()> {
+    file.rename(Location::Transit).await?;
 
-    let dst_file_name_txt = PathBuf::from(format!("{}-{}.txt", document_data.date, document_data.title));
-    let dst_path_txt = paths.make_path(Location::Outbox, dst_file_name_txt)?;
-    let mut file = fs::File::create(dst_path_txt).await?;
+    let file_info = FileInfo::new(file.get_path())?;
+    let document_data = query_ai(file_info).await?;
+    let dst_file_name_pdf = format!("{}-{}.pdf", document_data.date.clone(), document_data.title.clone());
+    let dst_path_pdf = file.make_path_with_new_filename(Location::Outbox, dst_file_name_pdf);
+    update_metadata(file.get_path(), dst_path_pdf, &document_data).await.map(|_| ())?;
+
+    let dst_file_name_txt = format!("{}-{}.txt", document_data.date, document_data.title);
+    let dst_path_txt = file.make_path_with_new_filename(Location::Outbox, dst_file_name_txt);
+    let mut txt_file = fs::File::create(dst_path_txt).await?;
     let mut buffer = Vec::<u8>::new();
     write!(buffer, "{}", document_data.content)?;
-    file.write_all(&buffer).await?;
+    txt_file.write_all(&buffer).await?;
+
+    file.rename(Location::Processed).await?;
 
     Ok(())
 }

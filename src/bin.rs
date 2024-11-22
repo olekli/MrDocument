@@ -1,6 +1,6 @@
 use mrdocument::watcher::{Watcher, WatcherEvent};
 use mrdocument::error::{Result, Error};
-use mrdocument::paths::{Paths, Location};
+use mrdocument::paths::{Paths, Location, FileObject};
 use env_logger;
 use env_logger::{Builder, Env};
 use clap::Parser;
@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
                 match event {
                     WatcherEvent::Paths(observed_paths) => {
                         for path in observed_paths {
-                            tokio::spawn(handle_file(paths.clone(), path.into()));
+                            tokio::spawn(handle_file(FileObject::new(paths.clone(), path)?));
                         }
                     }
                     WatcherEvent::Quit => {
