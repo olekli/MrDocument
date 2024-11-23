@@ -8,8 +8,8 @@ use notify::{
 use std::path::PathBuf;
 use tokio::signal::unix::{signal, SignalKind};
 use tokio::sync::mpsc;
-use tokio_stream::Stream;
 use tokio_stream::wrappers::{ReceiverStream, SignalStream};
+use tokio_stream::Stream;
 use tokio_stream::StreamExt;
 
 pub struct Watcher {
@@ -39,10 +39,12 @@ impl Watcher {
             SignalStream::new(signal(SignalKind::terminate())?),
             SignalStream::new(signal(SignalKind::quit())?),
             SignalStream::new(signal(SignalKind::interrupt())?),
-        ].into_iter().collect::<SelectAll<_>>().map(|_| Some(WatcherEvent::Quit));
+        ]
+        .into_iter()
+        .collect::<SelectAll<_>>()
+        .map(|_| Some(WatcherEvent::Quit));
 
-        let notify_stream = ReceiverStream::new(notify_rx)
-            .map(Watcher::filter_events);
+        let notify_stream = ReceiverStream::new(notify_rx).map(Watcher::filter_events);
 
         let queue = Box::new(notify_stream.merge(signal_stream).filter_map(|e| e));
 
@@ -56,7 +58,17 @@ impl Watcher {
                     kind: EventKind::Create(CreateKind::File),
                     paths,
                     ..
-                } => Some(WatcherEvent::Paths(paths)),
+                } => {
+                    let mut existing_paths = Vec::new();
+                    for path in paths {
+                        if let Ok(exists) = std::fs::exists(&path) {
+                            if exists {
+                                existing_paths.push(path);
+                            }
+                        }
+                    }
+                    Some(WatcherEvent::Paths(existing_paths))
+                }
                 _ => {
                     log::trace!("Ignoring event: {event:?}");
                     None

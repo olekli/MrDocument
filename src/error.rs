@@ -45,6 +45,9 @@ pub enum Error {
     #[error("Not a valid PDF")]
     NotValidPdfError,
 
+    #[error("File disappeared: {0:?}")]
+    FileDisappearedError(PathBuf),
+
     #[error("Cannot convert PDF: {0}")]
     PdfConversionError(String),
 

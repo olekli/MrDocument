@@ -23,6 +23,9 @@ pub async fn handle_file(mut file: FileObject) {
 async fn wait_for_document(file: &FileObject) -> Result<()> {
     let mut i = 6;
     while let Err(_) = lopdf::Document::load(file.get_path()).await {
+        if tokio::fs::metadata(file.get_path()).await.is_err() {
+            return Err(Error::FileDisappearedError(file.get_path()));
+        }
         log::info!("waiting for document to become ready: {file:?}");
         sleep(Duration::from_secs(10)).await;
         i = i - 1;
@@ -48,11 +51,11 @@ async fn handle_file_transit(file: &mut FileObject) -> Result<()> {
 async fn handle_file_processing(file: &mut FileObject) -> Result<()> {
     log::debug!("Waiting for file");
     sleep(Duration::from_secs(1)).await;
-
-    let file_info = FileInfo::new(file.get_path())?;
+    FileInfo::new(file.get_path())?;
     wait_for_document(file).await?;
     file.rename(Location::Transit).await?;
 
+    let file_info = FileInfo::new(file.get_path())?;
     let document_data = query_ai(file_info).await?;
     let dst_file_name_pdf = format!("{}-{}.pdf", document_data.date.clone(), document_data.title.clone());
     let dst_path_pdf = file.make_path_with_new_filename(Location::Outbox, dst_file_name_pdf);
