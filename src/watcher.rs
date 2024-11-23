@@ -1,4 +1,5 @@
 use crate::error::{Error, Result};
+use crate::util::file_exists;
 use futures::stream::SelectAll;
 use notify::event::CreateKind;
 use notify::{
@@ -15,7 +16,7 @@ use tokio_stream::StreamExt;
 pub struct Watcher {
     pub queue: Box<dyn Stream<Item = WatcherEvent> + Send + Unpin>,
 
-    watcher: RecommendedWatcher,
+    _watcher: RecommendedWatcher,
 }
 
 pub enum WatcherEvent {
@@ -48,7 +49,10 @@ impl Watcher {
 
         let queue = Box::new(notify_stream.merge(signal_stream).filter_map(|e| e));
 
-        Ok(Watcher { watcher, queue })
+        Ok(Watcher {
+            _watcher: watcher,
+            queue,
+        })
     }
 
     fn filter_events(event: std::result::Result<Event, notify::Error>) -> Option<WatcherEvent> {
@@ -59,14 +63,10 @@ impl Watcher {
                     paths,
                     ..
                 } => {
-                    let mut existing_paths = Vec::new();
-                    for path in paths {
-                        if let Ok(exists) = std::fs::exists(&path) {
-                            if exists {
-                                existing_paths.push(path);
-                            }
-                        }
-                    }
+                    let existing_paths: Vec<_> = paths
+                        .into_iter()
+                        .filter(|path| file_exists(&path))
+                        .collect();
                     Some(WatcherEvent::Paths(existing_paths))
                 }
                 _ => {

@@ -7,3 +7,4 @@ pub mod handler;
 pub mod main_loop;
 pub mod pdf;
 pub mod watcher;
+pub mod util;

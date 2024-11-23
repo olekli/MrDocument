@@ -3,8 +3,11 @@ use std::ffi::OsString;
 use std::fmt;
 use std::path::PathBuf;
 use tokio::fs;
+use crate::util::file_exists;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(EnumIter, Clone, Copy, Debug, PartialEq)]
 pub enum Location {
     Inbox,
     Outbox,
@@ -44,14 +47,22 @@ impl Paths {
 
 impl FileObject {
     pub fn new(paths: Paths, filepath: PathBuf) -> Result<Self> {
-        Ok(FileObject {
+        let file = FileObject {
             current_location: Location::Inbox,
             paths,
             filename: filepath
                 .file_name()
                 .ok_or_else(|| Error::UnsupportedFileTypeError(filepath.clone()))?
                 .to_os_string(),
-        })
+        };
+        for location in Location::iter() {
+            if location != Location::Inbox {
+                if file_exists(&file.make_path(location)) {
+                    return Err(Error::FileExists(filepath));
+                }
+            }
+        }
+        Ok(file)
     }
 
     pub fn make_path(&self, location: Location) -> PathBuf {

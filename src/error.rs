@@ -54,6 +54,9 @@ pub enum Error {
     #[error("Dependency missing: {0}")]
     DependencyMissingError(String),
 
+    #[error("File already present: {0:?}")]
+    FileExists(PathBuf),
+
     #[error("Other error: {0}")]
     Other(String),
 }
