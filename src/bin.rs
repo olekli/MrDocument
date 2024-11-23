@@ -1,8 +1,8 @@
+use clap::Parser;
 use env_logger;
 use env_logger::{Builder, Env};
-use clap::Parser;
-use mrdocument::main_loop::run_main_loop;
 use mrdocument::error::{Error, Result};
+use mrdocument::main_loop::run_main_loop;
 use std::env;
 use std::path::PathBuf;
 use which::which;

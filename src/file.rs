@@ -1,7 +1,7 @@
 use crate::error::{Error, Result};
-use std::path::PathBuf;
 use std::ffi::OsString;
 use std::fmt;
+use std::path::PathBuf;
 use tokio::fs;
 
 #[derive(Clone, Copy, Debug)]
@@ -44,10 +44,13 @@ impl Paths {
 
 impl FileObject {
     pub fn new(paths: Paths, filepath: PathBuf) -> Result<Self> {
-        Ok(FileObject{
+        Ok(FileObject {
             current_location: Location::Inbox,
             paths,
-            filename: filepath.file_name().ok_or_else(|| Error::UnsupportedFileTypeError(filepath.clone()))?.to_os_string(),
+            filename: filepath
+                .file_name()
+                .ok_or_else(|| Error::UnsupportedFileTypeError(filepath.clone()))?
+                .to_os_string(),
         })
     }
 
@@ -74,14 +77,16 @@ impl FileObject {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use rstest::rstest;
 
     #[rstest]
-    #[case(PathBuf::from("/home/baz"), PathBuf::from("/home/baz/inbox/foobar.pdf"))]
+    #[case(
+        PathBuf::from("/home/baz"),
+        PathBuf::from("/home/baz/inbox/foobar.pdf")
+    )]
     fn test(#[case] path: PathBuf, #[case] file: PathBuf) {
         let file = FileObject::new(Paths::new(path), file).unwrap();
         let this_path = file.make_path(Location::Transit);

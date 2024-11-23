@@ -1,15 +1,15 @@
-use crate::error::{Result, Error};
 use crate::chatgpt::query_ai;
-use crate::pdf::update_metadata;
-use crate::file::{Location, FileObject, Paths};
-use tokio::fs;
-use tokio::io::AsyncWriteExt;
-use std::io::Write;
-use tokio::time::{sleep, Duration};
+use crate::error::{Error, Result};
+use crate::file::{FileObject, Location, Paths};
 use crate::file_info::FileInfo;
-use tokio::task::JoinSet;
-use tokio::fs::create_dir_all;
+use crate::pdf::update_metadata;
+use std::io::Write;
 use std::path::PathBuf;
+use tokio::fs;
+use tokio::fs::create_dir_all;
+use tokio::io::AsyncWriteExt;
+use tokio::task::JoinSet;
+use tokio::time::{sleep, Duration};
 
 pub struct Handler {
     paths: Paths,
@@ -24,7 +24,7 @@ impl Handler {
         create_dir_all(paths.make_root(Location::Transit)).await?;
         create_dir_all(paths.make_root(Location::Processed)).await?;
         create_dir_all(paths.make_root(Location::Error)).await?;
-        Ok(Handler{
+        Ok(Handler {
             paths,
             tasks: JoinSet::new(),
             concurrency,
@@ -33,9 +33,16 @@ impl Handler {
 
     pub async fn handle_file(&mut self, filepath: PathBuf) {
         while self.tasks.len() >= self.concurrency.into() {
-            self.tasks.join_next().await.expect("Cannot be empty").expect("Task should not panic");
+            self.tasks
+                .join_next()
+                .await
+                .expect("Cannot be empty")
+                .expect("Task should not panic");
         }
-        self.tasks.spawn(Handler::handle_file_entry_point(self.paths.clone(), filepath.clone()));
+        self.tasks.spawn(Handler::handle_file_entry_point(
+            self.paths.clone(),
+            filepath.clone(),
+        ));
     }
 
     async fn handle_file_entry_point(paths: Paths, filepath: PathBuf) {
@@ -73,9 +80,15 @@ impl Handler {
 
         let file_info = FileInfo::new(file.get_path())?;
         let document_data = query_ai(file_info).await?;
-        let dst_file_name_pdf = format!("{}-{}.pdf", document_data.date.clone(), document_data.title.clone());
+        let dst_file_name_pdf = format!(
+            "{}-{}.pdf",
+            document_data.date.clone(),
+            document_data.title.clone()
+        );
         let dst_path_pdf = file.make_path_with_new_filename(Location::Outbox, dst_file_name_pdf);
-        update_metadata(file.get_path(), dst_path_pdf, &document_data).await.map(|_| ())?;
+        update_metadata(file.get_path(), dst_path_pdf, &document_data)
+            .await
+            .map(|_| ())?;
 
         let dst_file_name_txt = format!("{}-{}.txt", document_data.date, document_data.title);
         let dst_path_txt = file.make_path_with_new_filename(Location::Outbox, dst_file_name_txt);

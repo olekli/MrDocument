@@ -1,5 +1,5 @@
+use display_json::DisplayAsJsonPretty;
 use serde::{Deserialize, Serialize};
-use display_json::{DisplayAsJsonPretty};
 
 #[derive(Serialize, Deserialize, DisplayAsJsonPretty)]
 pub struct DocumentData {

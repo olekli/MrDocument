@@ -1,9 +1,9 @@
 use crate::document::DocumentData;
+use crate::error::{Error, Result};
+use std::path::PathBuf;
+use std::process::Stdio;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::process::Command;
-use std::process::{Stdio};
-use std::path::PathBuf;
-use crate::error::{Result, Error};
 
 fn make_metdata_entry(key: String, value: String) -> Vec<String> {
     vec![
@@ -13,7 +13,11 @@ fn make_metdata_entry(key: String, value: String) -> Vec<String> {
     ]
 }
 
-pub async fn update_metadata(src: PathBuf, dst: PathBuf, document_data: &DocumentData) -> Result<Vec<()>> {
+pub async fn update_metadata(
+    src: PathBuf,
+    dst: PathBuf,
+    document_data: &DocumentData,
+) -> Result<Vec<()>> {
     log::info!("Updating metadata {src:?}");
     let mut process_in = Command::new("pdftk")
         .arg(src.clone())
@@ -70,27 +74,41 @@ pub async fn update_metadata(src: PathBuf, dst: PathBuf, document_data: &Documen
     let status_in = process_in.wait().await?;
 
     vec![
-        status_in.success().then_some(()).ok_or(Error::MetadataInError(err_in)),
-        status_out.success().then_some(()).ok_or(Error::MetadataOutError(err_out)),
-    ].into_iter().collect()
+        status_in
+            .success()
+            .then_some(())
+            .ok_or(Error::MetadataInError(err_in)),
+        status_out
+            .success()
+            .then_some(())
+            .ok_or(Error::MetadataOutError(err_out)),
+    ]
+    .into_iter()
+    .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempdir::TempDir;
     use rstest::rstest;
+    use tempdir::TempDir;
 
     #[rstest]
     #[tokio::test]
     async fn test() {
         let tmp = TempDir::new("mrdocument-test").unwrap();
-        let document_data = DocumentData{
+        let document_data = DocumentData {
             title: "This Title".to_string(),
             date: "2024-11-11".to_string(),
             keywords: vec!["key1".to_string(), "key2".to_string(), "foo".to_string()],
             content: "foobar".to_string(),
         };
-        update_metadata(PathBuf::from("files/example.pdf"), tmp.path().join("example-mod.pdf"), &document_data).await.unwrap();
+        update_metadata(
+            PathBuf::from("files/example.pdf"),
+            tmp.path().join("example-mod.pdf"),
+            &document_data,
+        )
+        .await
+        .unwrap();
     }
 }

@@ -1,9 +1,9 @@
-pub mod error;
-pub mod watcher;
 pub mod chatgpt;
 pub mod document;
+pub mod error;
+pub mod file;
 pub mod file_info;
 pub mod handler;
-pub mod pdf;
-pub mod file;
 pub mod main_loop;
+pub mod pdf;
+pub mod watcher;

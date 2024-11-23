@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use openai_api_rs::v1::chat_completion::ChatCompletionResponse;
+use std::path::PathBuf;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

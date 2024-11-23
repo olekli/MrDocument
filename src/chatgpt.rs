@@ -15,7 +15,10 @@ use std::env;
 pub async fn query_ai(file_info: FileInfo) -> Result<DocumentData> {
     log::info!("Received {file_info:?}");
     let api_key = env::var("OPENAI_API_KEY").unwrap().to_string();
-    let client = OpenAIClient::builder().with_api_key(api_key).build().map_err(|_| Error::NoApiKeyError)?;
+    let client = OpenAIClient::builder()
+        .with_api_key(api_key)
+        .build()
+        .map_err(|_| Error::NoApiKeyError)?;
     let files: Vec<String> = file_info
         .base64()
         .await?
@@ -110,16 +113,27 @@ pub async fn query_ai(file_info: FileInfo) -> Result<DocumentData> {
         Ok(serde_json::from_str(
             &response
                 .choices
-                .first().ok_or_else(|| Error::DoesNotProcessError(None))?
+                .first()
+                .ok_or_else(|| Error::DoesNotProcessError(None))?
                 .message
                 .tool_calls
-                .as_ref().ok_or_else(|| Error::DoesNotProcessError(None))?
-                .first().ok_or_else(|| Error::DoesNotProcessError(None))?
+                .as_ref()
+                .ok_or_else(|| Error::DoesNotProcessError(None))?
+                .first()
+                .ok_or_else(|| Error::DoesNotProcessError(None))?
                 .function
                 .arguments
-                .as_ref().ok_or_else(|| Error::DoesNotProcessError(None))?,
+                .as_ref()
+                .ok_or_else(|| Error::DoesNotProcessError(None))?,
         )?)
-    })().map_err(|err| if let Error::DoesNotProcessError(_) = err { Error::DoesNotProcessError(Some(response)) } else { err });
+    })()
+    .map_err(|err| {
+        if let Error::DoesNotProcessError(_) = err {
+            Error::DoesNotProcessError(Some(response))
+        } else {
+            err
+        }
+    });
     let result: Result<DocumentData> = Ok(serde_json::from_value(result_value?)?);
 
     result
