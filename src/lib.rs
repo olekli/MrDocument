@@ -8,3 +8,4 @@ pub mod main_loop;
 pub mod pdf;
 pub mod watcher;
 pub mod util;
+pub mod api_key;

@@ -10,11 +10,11 @@ use openai_api_rs::v1::common::GPT4_O;
 use openai_api_rs::v1::types::{Function, FunctionParameters, JSONSchemaDefine, JSONSchemaType};
 use serde_json;
 use std::collections::HashMap;
-use std::env;
+use crate::api_key;
 
 pub async fn query_ai(file_info: FileInfo) -> Result<DocumentData> {
     log::info!("Received {file_info:?}");
-    let api_key = env::var("OPENAI_API_KEY").unwrap().to_string();
+    let api_key = api_key::get();
     let client = OpenAIClient::builder()
         .with_api_key(api_key)
         .build()
