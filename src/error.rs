@@ -51,6 +51,9 @@ pub enum Error {
     #[error("Cannot convert PDF: {0}")]
     PdfConversionError(String),
 
+    #[error("Dependency missing: {0}")]
+    DependencyMissingError(String),
+
     #[error("Other error: {0}")]
     Other(String),
 }
