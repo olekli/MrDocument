@@ -11,6 +11,7 @@ readme = "README.md"
 [dependencies]
 base64 = "0.22.1"
 clap = { version = "4.5.21", features = ["derive"] }
+dirs = "5.0.1"
 display_json = "0.2.1"
 env_logger = "0.11.5"
 fmt = "0.1.0"
@@ -39,6 +40,10 @@ path = "src/lib.rs"
 [[bin]]
 name = "mrdocument"
 path = "src/bin.rs"
+
+[[bin]]
+name = "mrdocument-install"
+path = "src/install.rs"
 
 [dev-dependencies]
 async-std = { version = "1.13.0", features = ["attributes"] }
