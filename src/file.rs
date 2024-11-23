@@ -2,10 +2,10 @@ use crate::error::{Error, Result};
 use std::ffi::OsString;
 use std::fmt;
 use std::path::PathBuf;
-use tokio::fs;
 use crate::util::file_exists;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+use crate::util::{move_file, make_unique_path};
 
 #[derive(EnumIter, Clone, Copy, Debug, PartialEq)]
 pub enum Location {
@@ -69,8 +69,8 @@ impl FileObject {
         self.paths.make_root(location).join(self.filename.clone())
     }
 
-    pub fn make_path_with_new_filename(&self, location: Location, filename: String) -> PathBuf {
-        self.paths.make_root(location).join(filename)
+    pub async fn make_path_with_new_filename(&self, location: Location, filename: String) -> PathBuf {
+        make_unique_path(self.paths.make_root(location), filename).await
     }
 
     pub fn get_path(&self) -> PathBuf {
@@ -81,7 +81,7 @@ impl FileObject {
         log::debug!("Moving {self:?} to {location:?}");
         let src = self.get_path();
         let dst = self.make_path(location);
-        fs::rename(src, dst).await?;
+        move_file(&src, &dst).await?;
         self.current_location = location;
 
         Ok(())

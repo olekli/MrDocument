@@ -85,13 +85,13 @@ impl Handler {
             document_data.date.clone(),
             document_data.title.clone()
         );
-        let dst_path_pdf = file.make_path_with_new_filename(Location::Outbox, dst_file_name_pdf);
+        let dst_path_pdf = file.make_path_with_new_filename(Location::Outbox, dst_file_name_pdf).await;
         update_metadata(file.get_path(), dst_path_pdf, &document_data)
             .await
             .map(|_| ())?;
 
         let dst_file_name_txt = format!("{}-{}.txt", document_data.date, document_data.title);
-        let dst_path_txt = file.make_path_with_new_filename(Location::Outbox, dst_file_name_txt);
+        let dst_path_txt = file.make_path_with_new_filename(Location::Outbox, dst_file_name_txt).await;
         let mut txt_file = fs::File::create(dst_path_txt).await?;
         let mut buffer = Vec::<u8>::new();
         write!(buffer, "{}", document_data.content)?;
