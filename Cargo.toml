@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Ole Kliemann <mail@olekliemann.de>"]
 edition = "2021"
 license = "Apache-2.0"
-description = ""
+description = "Automatic PDF transcription and classification via OpenAI"
 repository = "https://github.com/olekli/mrdocument"
 readme = "README.md"
 
