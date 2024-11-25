@@ -1,4 +1,4 @@
-use crate::error::{Result};
+use crate::error::{Result, Error};
 use tokio::fs;
 use std::path::PathBuf;
 use uuid::Uuid;
@@ -27,7 +27,13 @@ pub async fn make_unique_path(path: PathBuf, filename: String) -> PathBuf {
 
 pub async fn move_file(from: &PathBuf, to: &PathBuf) -> Result<()> {
     fs::File::create_new(to).await?;
-    fs::rename(from, to).await?;
+    let result = fs::rename(from, to).await;
 
-    Ok(())
+    match result {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            fs::remove_file(to).await.or_else(|_| Ok::<(), Error>(()))?;
+            Err(Error::from(err))
+        }
+    }
 }
