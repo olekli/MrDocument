@@ -101,6 +101,15 @@ pub async fn query_ai(profile: ChatGptProfile, file_info: FileInfo) -> Result<Do
 
     let tools = default_tools();
     let mut messages = default_instructions();
+    for instr in profile.additional_instructions {
+        messages.push(ChatCompletionMessage {
+            role: MessageRole::system,
+            content: Content::Text(instr),
+            name: None,
+            tool_calls: None,
+            tool_call_id: None,
+        });
+    }
     for file in files {
         messages.push(ChatCompletionMessage {
             role: MessageRole::user,

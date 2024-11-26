@@ -13,6 +13,7 @@ pub struct ChatGptProfile {
     pub model: String,
     #[serde(default = "default_temperature")]
     pub temperature: f64,
+    pub additional_instructions: Vec<String>,
 }
 
 fn default_temperature() -> f64 {
@@ -24,6 +25,7 @@ impl Default for ChatGptProfile {
         ChatGptProfile {
             model: GPT4_O.to_string(),
             temperature: 1.0,
+            additional_instructions: Vec::new(),
         }
     }
 }
