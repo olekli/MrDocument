@@ -3,7 +3,6 @@ use tokio::fs;
 use std::path::PathBuf;
 use uuid::Uuid;
 
-
 pub fn file_exists(path: &PathBuf) -> bool {
     if let Ok(exists) = std::fs::exists(&path) {
         exists

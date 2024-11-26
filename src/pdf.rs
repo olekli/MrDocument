@@ -99,9 +99,11 @@ mod tests {
         let tmp = TempDir::new("mrdocument-test").unwrap();
         let document_data = DocumentData {
             title: "This Title".to_string(),
+            summary: "This summary".to_string(),
+            class: "This class".to_string(),
             date: "2024-11-11".to_string(),
             keywords: vec!["key1".to_string(), "key2".to_string(), "foo".to_string()],
-            content: "foobar".to_string(),
+            content: Some("foobar".to_string()),
         };
         update_metadata(
             PathBuf::from("files/example.pdf"),

@@ -9,6 +9,7 @@ fn setup_mrdocument_service(install_path: PathBuf, api_key: PathBuf) -> Result<(
         fs::create_dir_all(&install_path)?;
     }
 
+    //let config_dir = dirs::config_local_dir().ok_or(Error::SkelError)?;
     let api_key_path = install_path.join(".openai-api-key");
     let mut api_key_file = File::create(&api_key_path)?;
     write!(api_key_file, "{}", std::fs::read_to_string(api_key)?)?;

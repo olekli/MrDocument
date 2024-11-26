@@ -1,31 +1,10 @@
 use crate::error::{Error, Result};
-use std::ffi::OsString;
-use std::fmt;
-use std::path::PathBuf;
 use crate::util::file_exists;
+use crate::util::{make_unique_path, move_file};
+use std::ffi::OsString;
+use std::path::PathBuf;
+use crate::paths::{Location, Paths};
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
-use crate::util::{move_file, make_unique_path};
-
-#[derive(EnumIter, Clone, Copy, Debug, PartialEq)]
-pub enum Location {
-    Inbox,
-    Outbox,
-    Transit,
-    Processed,
-    Error,
-}
-
-impl fmt::Display for Location {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", format!("{:?}", self).to_lowercase())
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Paths {
-    path: PathBuf,
-}
 
 #[derive(Clone, Debug)]
 pub struct FileObject {
@@ -33,16 +12,6 @@ pub struct FileObject {
 
     paths: Paths,
     filename: OsString,
-}
-
-impl Paths {
-    pub fn new(path: PathBuf) -> Self {
-        Paths { path }
-    }
-
-    pub fn make_root(&self, location: Location) -> PathBuf {
-        self.path.clone().join(location.to_string())
-    }
 }
 
 impl FileObject {
@@ -69,7 +38,11 @@ impl FileObject {
         self.paths.make_root(location).join(self.filename.clone())
     }
 
-    pub async fn make_path_with_new_filename(&self, location: Location, filename: String) -> PathBuf {
+    pub async fn make_path_with_new_filename(
+        &self,
+        location: Location,
+        filename: String,
+    ) -> PathBuf {
         make_unique_path(self.paths.make_root(location), filename).await
     }
 
@@ -99,7 +72,7 @@ mod tests {
         PathBuf::from("/home/baz/inbox/foobar.pdf")
     )]
     fn test(#[case] path: PathBuf, #[case] file: PathBuf) {
-        let file = FileObject::new(Paths::new(path), file).unwrap();
+        let file = FileObject::new(Paths::default().with_path(path), file).unwrap();
         let this_path = file.make_path(Location::Transit);
         assert_eq!(this_path, PathBuf::from("/home/baz/transit/foobar.pdf"));
     }

@@ -1,7 +1,9 @@
 pub mod chatgpt;
 pub mod document;
 pub mod error;
-pub mod file;
+pub mod file_object;
+pub mod paths;
+pub mod profile;
 pub mod file_info;
 pub mod handler;
 pub mod main_loop;

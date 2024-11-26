@@ -1,9 +1,10 @@
 use clap::Parser;
 use env_logger;
 use env_logger::{Builder, Env};
+use mrdocument::profile;
 use mrdocument::error::{Error, Result};
 use mrdocument::main_loop::run_main_loop;
-use std::path::PathBuf;
+//use std::path::PathBuf;
 use which::which;
 
 #[derive(Parser)]
@@ -27,12 +28,13 @@ async fn main() -> Result<()> {
 }
 
 async fn main_log() -> Result<()> {
-    let args = Cli::parse();
-    let path = PathBuf::from(args.path.clone()).canonicalize()?;
+    //let args = Cli::parse();
+    //let path = PathBuf::from(args.path.clone()).canonicalize()?;
 
-    mrdocument::api_key::init(path.clone())?;
+    mrdocument::api_key::init()?;
     which("pdftoppm").map_err(|_| Error::DependencyMissingError("pdftoppm".to_string()))?;
     which("pdftk").map_err(|_| Error::DependencyMissingError("pdftk".to_string()))?;
 
-    run_main_loop(path).await
+    let profile = profile::init_default_profile().await?;
+    run_main_loop(profile).await
 }

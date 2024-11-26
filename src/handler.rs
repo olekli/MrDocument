@@ -1,9 +1,10 @@
 use crate::chatgpt::query_ai;
 use crate::error::{Error, Result};
-use crate::file::{FileObject, Location, Paths};
 use crate::file_info::FileInfo;
+use crate::file_object::FileObject;
+use crate::paths::Location;
 use crate::pdf::update_metadata;
-use std::io::Write;
+use crate::profile::Profile;
 use std::path::PathBuf;
 use tokio::fs;
 use tokio::fs::create_dir_all;
@@ -12,20 +13,20 @@ use tokio::task::JoinSet;
 use tokio::time::{sleep, Duration};
 
 pub struct Handler {
-    paths: Paths,
+    profile: Profile,
     tasks: JoinSet<()>,
     concurrency: u8,
 }
 
 impl Handler {
-    pub async fn new(paths: Paths, concurrency: u8) -> Result<Self> {
-        create_dir_all(paths.make_root(Location::Inbox)).await?;
-        create_dir_all(paths.make_root(Location::Outbox)).await?;
-        create_dir_all(paths.make_root(Location::Transit)).await?;
-        create_dir_all(paths.make_root(Location::Processed)).await?;
-        create_dir_all(paths.make_root(Location::Error)).await?;
+    pub async fn new(profile: Profile, concurrency: u8) -> Result<Self> {
+        create_dir_all(profile.paths.make_root(Location::Inbox)).await?;
+        create_dir_all(profile.paths.make_root(Location::Outbox)).await?;
+        create_dir_all(profile.paths.make_root(Location::Transit)).await?;
+        create_dir_all(profile.paths.make_root(Location::Processed)).await?;
+        create_dir_all(profile.paths.make_root(Location::Error)).await?;
         Ok(Handler {
-            paths,
+            profile,
             tasks: JoinSet::new(),
             concurrency,
         })
@@ -40,14 +41,14 @@ impl Handler {
                 .expect("Task should not panic");
         }
         self.tasks.spawn(Handler::handle_file_entry_point(
-            self.paths.clone(),
+            self.profile.clone(),
             filepath.clone(),
         ));
     }
 
-    async fn handle_file_entry_point(paths: Paths, filepath: PathBuf) {
+    async fn handle_file_entry_point(profile: Profile, filepath: PathBuf) {
         log::info!("Processing {filepath:?}");
-        match Handler::handle_file_transit(paths, filepath.clone()).await {
+        match Handler::handle_file_transit(profile, filepath.clone()).await {
             Ok(_) => {
                 log::info!("Processed {:?}", filepath);
             }
@@ -57,10 +58,10 @@ impl Handler {
         }
     }
 
-    async fn handle_file_transit(paths: Paths, filepath: PathBuf) -> Result<()> {
-        let mut file = FileObject::new(paths, filepath)?;
+    async fn handle_file_transit(profile: Profile, filepath: PathBuf) -> Result<()> {
+        let mut file = FileObject::new(profile.paths.clone(), filepath)?;
         log::debug!("Processing as {file:?}");
-        match Handler::handle_file_processing(&mut file).await {
+        match Handler::handle_file_processing(profile, &mut file).await {
             Ok(_) => Ok(()),
             Err(err) => {
                 if let Err(err) = file.rename(Location::Error).await {
@@ -71,7 +72,7 @@ impl Handler {
         }
     }
 
-    async fn handle_file_processing(file: &mut FileObject) -> Result<()> {
+    async fn handle_file_processing(profile: Profile, file: &mut FileObject) -> Result<()> {
         log::debug!("Waiting for file");
         sleep(Duration::from_secs(1)).await;
         FileInfo::new(file.get_path())?;
@@ -79,23 +80,32 @@ impl Handler {
         file.rename(Location::Transit).await?;
 
         let file_info = FileInfo::new(file.get_path())?;
-        let document_data = query_ai(file_info).await?;
-        let dst_file_name_pdf = format!(
-            "{}-{}.pdf",
-            document_data.date.clone(),
-            document_data.title.clone()
-        );
-        let dst_path_pdf = file.make_path_with_new_filename(Location::Outbox, dst_file_name_pdf).await;
+        let document_data = query_ai(profile.chatgpt, file_info).await?;
+        let dst_path_pdf = file
+            .make_path_with_new_filename(Location::Outbox, document_data.make_filename("pdf"))
+            .await;
         update_metadata(file.get_path(), dst_path_pdf, &document_data)
             .await
             .map(|_| ())?;
 
-        let dst_file_name_txt = format!("{}-{}.txt", document_data.date, document_data.title);
-        let dst_path_txt = file.make_path_with_new_filename(Location::Outbox, dst_file_name_txt).await;
-        let mut txt_file = fs::File::create(dst_path_txt).await?;
-        let mut buffer = Vec::<u8>::new();
-        write!(buffer, "{}", document_data.content)?;
-        txt_file.write_all(&buffer).await?;
+        if let Some(ref content) = document_data.content {
+            let content_path = file
+                .make_path_with_new_filename(
+                    Location::Outbox,
+                    document_data.make_filename("content"),
+                )
+                .await;
+            let mut out = fs::File::create(content_path).await?;
+            out.write_all(content.as_bytes()).await?;
+        }
+        let summary_path = file
+            .make_path_with_new_filename(
+                Location::Outbox,
+                document_data.make_filename("summary"),
+            )
+            .await;
+        let mut out = fs::File::create(summary_path).await?;
+        out.write_all(document_data.summary.as_bytes()).await?;
 
         file.rename(Location::Processed).await?;
 

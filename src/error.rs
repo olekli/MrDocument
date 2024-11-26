@@ -9,8 +9,11 @@ pub enum Error {
     #[error("Notify error: {0}")]
     NotifyError(#[from] notify::Error),
 
-    #[error("Serde error: {0}")]
-    SerdeError(#[from] serde_json::Error),
+    #[error("Serde JSON error: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
+
+    #[error("Serde YAML error: {0}")]
+    SerdeYamlError(#[from] serde_yaml::Error),
 
     #[error("Stream closed")]
     StreamClosedError,
@@ -56,6 +59,9 @@ pub enum Error {
 
     #[error("File already present: {0:?}")]
     FileExists(PathBuf),
+
+    #[error("Skeleton error")]
+    SkelError,
 
     #[error("Other error: {0}")]
     Other(String),
