@@ -59,6 +59,14 @@ impl Profile {
         Ok(serde_yaml::from_str(&fs::read_to_string(path).await?)?)
     }
 
+    pub fn with_path(self, path: PathBuf) -> Profile {
+        Profile {
+            name: self.name,
+            chatgpt: self.chatgpt,
+            paths: self.paths.with_path(path),
+        }
+    }
+
     pub async fn write_to_file(&self) -> Result<()> {
         let path = Profile::get_profile_dir()?;
         log::debug!("Creating config dir {:?}", path);
