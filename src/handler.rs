@@ -11,11 +11,43 @@ use tokio::fs::create_dir_all;
 use tokio::io::AsyncWriteExt;
 use tokio::task::JoinSet;
 use tokio::time::{sleep, Duration};
+use notify::{Event, EventKind};
+use notify::event::CreateKind;
+use crate::util::file_exists;
+use std::future::Future;
+use std::marker::Send;
+
+pub trait EventHandler: Send + 'static {
+    fn handle_event(&mut self, event: Event) -> impl Future<Output = ()> + Send;
+}
 
 pub struct Handler {
     profile: Profile,
     tasks: JoinSet<()>,
     concurrency: u8,
+}
+
+impl EventHandler for Handler {
+    async fn handle_event(&mut self, event: Event) {
+        match event {
+            Event {
+                kind: EventKind::Create(CreateKind::File),
+                paths,
+                ..
+            } => {
+                let existing_paths: Vec<_> = paths
+                    .into_iter()
+                    .filter(|path| file_exists(&path))
+                    .collect();
+                for path in existing_paths {
+                    self.handle_file(path).await;
+                }
+            }
+            _ => {
+                log::trace!("Ignoring event: {event:?}");
+            }
+        };
+    }
 }
 
 impl Handler {
@@ -32,7 +64,7 @@ impl Handler {
         })
     }
 
-    pub async fn handle_file(&mut self, filepath: PathBuf) {
+    async fn handle_file(&mut self, filepath: PathBuf) {
         while self.tasks.len() >= self.concurrency.into() {
             self.tasks
                 .join_next()

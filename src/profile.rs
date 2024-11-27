@@ -60,8 +60,7 @@ impl Profile {
     }
 
     pub async fn write_to_file(&self) -> Result<()> {
-        let config_dir = dirs::config_local_dir().ok_or(Error::SkelError)?;
-        let path = config_dir.join("MrDocument").join("profile");
+        let path = Profile::get_profile_dir()?;
         log::debug!("Creating config dir {:?}", path);
         fs::create_dir_all(path.clone()).await?;
         let filepath = path.join(format!("{}.yaml", self.name));
@@ -72,6 +71,13 @@ impl Profile {
             Err(_) => Ok(()),
             Ok(mut file) => Ok(file.write_all(serde_yaml::to_string(self)?.as_bytes()).await?),
         }
+    }
+
+    pub fn get_profile_dir() -> Result<PathBuf> {
+        let config_dir = dirs::config_local_dir().ok_or(Error::SkelError)?;
+        let path = config_dir.join("MrDocument").join("profile");
+
+        Ok(path)
     }
 }
 

@@ -63,6 +63,12 @@ pub enum Error {
     #[error("Skeleton error")]
     SkelError,
 
+    #[error("Channel send error: {0}")]
+    SendError(#[from] tokio::sync::mpsc::error::SendError<()>),
+
+    #[error("Join task error: {0}")]
+    JoinError(#[from] tokio::task::JoinError),
+
     #[error("Other error: {0}")]
     Other(String),
 }
