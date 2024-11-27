@@ -47,6 +47,10 @@ path = "src/bin.rs"
 name = "mrdocument-install"
 path = "src/install.rs"
 
+[[bin]]
+name = "mrdocument-watcher-example"
+path = "src/watcher_example.rs"
+
 [dev-dependencies]
 async-std = { version = "1.13.0", features = ["attributes"] }
 rstest = "0.23.0"
