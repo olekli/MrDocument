@@ -8,29 +8,29 @@ use tokio::fs;
 use tokio::io::AsyncWriteExt;
 use std::io::ErrorKind;
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 pub struct ChatGptProfile {
     pub model: String,
     #[serde(default = "default_temperature")]
-    pub temperature: f64,
+    pub temperature: u8,
     pub additional_instructions: Vec<String>,
 }
 
-fn default_temperature() -> f64 {
-    1.0
+fn default_temperature() -> u8 {
+    100
 }
 
 impl Default for ChatGptProfile {
     fn default() -> ChatGptProfile {
         ChatGptProfile {
             model: GPT4_O.to_string(),
-            temperature: 1.0,
+            temperature: 100,
             additional_instructions: Vec::new(),
         }
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 pub struct Profile {
     #[serde(default = "default_name")]
     pub name: String,

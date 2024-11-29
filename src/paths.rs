@@ -23,7 +23,7 @@ impl fmt::Display for Location {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 pub struct Paths {
     pub path: PathBuf,
     #[serde(rename = "locations")]

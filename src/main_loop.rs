@@ -1,15 +1,11 @@
 use crate::error::Result;
-use crate::handler::Handler;
-use crate::paths::Location;
-use crate::profile::Profile;
 use crate::watcher::WatcherLoop;
+use crate::profile_handler::ProfileHandler;
+use std::path::PathBuf;
 
-pub async fn run_main_loop(profile: Profile) -> Result<()> {
-    log::info!("Operating on {:?}", profile.paths.path);
-    let inbox_path = profile.paths.make_root(Location::Inbox);
-    let handler = Handler::new(profile, 4).await?;
-    let watcher_loop =
-        WatcherLoop::new(inbox_path, handler).await?;
+pub async fn run_main_loop(path: PathBuf) -> Result<()> {
+    log::info!("Watching profiles: {:?}", path);
+    let watcher_loop = WatcherLoop::new(path.clone(), ProfileHandler::new(path)).await?;
 
     Ok(watcher_loop.wait().await?)
 }

@@ -19,6 +19,8 @@ use std::marker::Send;
 
 pub trait EventHandler: Send + 'static {
     fn handle_event(&mut self, event: Event) -> impl Future<Output = ()> + Send;
+    fn on_start(&mut self) -> impl Future<Output = ()> + Send { async {} }
+    fn on_stop(self) -> impl Future<Output = ()> + Send where Self: Sized { async {} }
 }
 
 pub struct Handler {
@@ -48,6 +50,10 @@ impl EventHandler for Handler {
             }
         };
     }
+
+    async fn on_stop(self) {
+        self.wait().await;
+    }
 }
 
 impl Handler {
@@ -76,6 +82,10 @@ impl Handler {
             self.profile.clone(),
             filepath.clone(),
         ));
+    }
+
+    async fn wait(self) {
+        self.tasks.join_all().await;
     }
 
     async fn handle_file_entry_point(profile: Profile, filepath: PathBuf) {

@@ -1,9 +1,7 @@
 use clap::Parser;
 use env_logger;
 use env_logger::{Builder, Env};
-use mrdocument::profile;
-use mrdocument::error::{Error, Result};
-use mrdocument::main_loop::run_main_loop;
+use mrdocument::error::{Result};
 use mrdocument::handler::EventHandler;
 use notify::Event;
 use std::path::PathBuf;

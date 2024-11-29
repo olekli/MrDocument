@@ -11,3 +11,4 @@ pub mod pdf;
 pub mod watcher;
 pub mod util;
 pub mod api_key;
+pub mod profile_handler;

@@ -52,7 +52,9 @@ impl WatcherLoop {
     where
         H: EventHandler,
     {
-        loop {
+        event_handler.on_start().await;
+
+        let result = loop {
             match watcher.queue.next().await {
                 Some(event) => match event {
                     WatcherEvent::Event(event) => {
@@ -71,7 +73,12 @@ impl WatcherLoop {
                     break Err(Error::StreamClosedError);
                 }
             };
-        }
+        };
+
+        log::debug!("Waiting for profile to stop");
+        event_handler.on_stop().await;
+
+        result
     }
 }
 

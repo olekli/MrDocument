@@ -124,7 +124,7 @@ pub async fn query_ai(profile: ChatGptProfile, file_info: FileInfo) -> Result<Do
         });
     }
     let req = ChatCompletionRequest::new(profile.model, messages)
-        .temperature(profile.temperature)
+        .temperature(<u8 as Into<f64>>::into(profile.temperature) / 100.0)
         .tools(tools)
         .tool_choice(ToolChoiceType::Required);
     log::info!("Sending {file_info:?}");
