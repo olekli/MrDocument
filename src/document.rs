@@ -14,6 +14,6 @@ pub struct DocumentData {
 
 impl DocumentData {
     pub fn make_filename(&self, suffix: &str) -> String {
-        format!("{}-{}-{}-{}.{}", self.date, self.class.to_lowercase(), self.source, self.title, suffix)
+        format!("{}-{}-{}-{}.{}", self.date, self.class.to_lowercase(), self.source.to_lowercase(), self.title, suffix)
     }
 }

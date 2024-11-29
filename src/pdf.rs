@@ -47,10 +47,20 @@ pub async fn update_metadata(
     let mut data = String::new();
     data_in.read_to_string(&mut data).await?;
 
+    let keywords: Vec<_> = document_data
+        .keywords
+        .iter()
+        .cloned()
+        .chain(vec![
+            document_data.class.clone(),
+            document_data.source.clone(),
+        ])
+        .collect();
+
     let updated = data
         + &vec![make_metdata_entry(
             "Keywords".to_string(),
-            document_data.keywords.clone().join(", "),
+            keywords.join(", "),
         )]
         .into_iter()
         .flatten()
@@ -101,6 +111,7 @@ mod tests {
             title: "This Title".to_string(),
             summary: "This summary".to_string(),
             class: "This class".to_string(),
+            source: "This source".to_string(),
             date: "2024-11-11".to_string(),
             keywords: vec!["key1".to_string(), "key2".to_string(), "foo".to_string()],
             content: Some("foobar".to_string()),

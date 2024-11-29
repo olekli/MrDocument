@@ -7,8 +7,8 @@ Whenever a PDF file appears in this directory,
 it is sent to ChatGPT.
 There it is transcribed, summarized and categorized by document class and keywords.
 Keywords are added to the PDF's metadata.
-The PDF file is also renamed according to the schema `{DATE}-{CLASS}-{TITLE}`
-where date, class and title are determined by the AI depending on the document's content.
+The PDF file is also renamed according to the schema `{DATE}-{CLASS}-{SOURCE}-{TITLE}`
+where date, class, source and title are determined by the AI depending on the document's content.
 
 ## Getting Started
 

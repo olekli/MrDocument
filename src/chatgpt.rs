@@ -17,7 +17,8 @@ fn default_tools() -> Vec<Tool> {
             "name": "return_document_data",
             "description": "Please use this function to return the transcribed content \
                 of the document, your summary of the content, \
-                your classification of the document, the keywords you assigned, \
+                your classification of the document, the source of the document, \
+                the keywords you assigned, \
                 the title you assigned and the date you determined.",
             "parameters": {
                 "type": "object",
@@ -80,12 +81,11 @@ fn default_instructions() -> Vec<ChatCompletionMessage> {
             The grammatical number of the word used as class should be singular if possible. \n\
             (4) The source of the document. \
             This could be the author, creator, sender or issuer of the document. \n\
-            (5) Between 2 and 5 keywords describing the content of the document. \
-            The class of the document should be one the keywords. \n\
+            (5) Between 2 and 4 keywords describing the content of the document. \n\
             (6) A title describing the document. \
             It should be sufficiently specific to differentiate \
             this particular document from other documents of this class and source, \
-            but it should not duplicate the class or source. \
+            but it should not duplicate words that are already found as class or source. \
             The title must be usable as part of a filename and must not contain whitespaces or non-ascii characters. \n\
             (7) A date to be associated with the document.\n
             All output shall be in the language of the document.\n"
