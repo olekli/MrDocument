@@ -3,7 +3,6 @@ use env_logger::{Builder, Env};
 use mrdocument::error::{Error, Result};
 use mrdocument::main_loop::run_main_loop;
 use mrdocument::profile::Profile;
-use std::path::PathBuf;
 use which::which;
 
 #[tokio::main]
@@ -26,6 +25,6 @@ async fn main_log() -> Result<()> {
     which("pdftoppm").map_err(|_| Error::DependencyMissingError("pdftoppm".to_string()))?;
     which("pdftk").map_err(|_| Error::DependencyMissingError("pdftk".to_string()))?;
 
-    let path = Profile::get_profile_dir();
+    let path = Profile::get_profile_dir()?;
     run_main_loop(path).await
 }

@@ -32,16 +32,10 @@ impl Default for ChatGptProfile {
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 pub struct Profile {
-    #[serde(default = "default_name")]
     pub name: String,
     #[serde(default)]
     pub chatgpt: ChatGptProfile,
-    #[serde(default)]
     pub paths: Paths,
-}
-
-fn default_name() -> String {
-    "default".to_string()
 }
 
 impl Default for Profile {
@@ -87,11 +81,11 @@ impl Profile {
 
         Ok(path)
     }
-}
 
-pub async fn init_default_profile() -> Result<Profile> {
-    let profile = Profile::default();
-    profile.write_to_file().await?;
+    pub async fn init_default_profile() -> Result<Profile> {
+        let profile = Profile::default();
+        profile.write_to_file().await?;
 
-    Ok(profile)
+        Ok(profile)
+    }
 }

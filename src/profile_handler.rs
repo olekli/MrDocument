@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{Result};
 use crate::handler::{EventHandler, Handler};
 use crate::paths::Location;
 use crate::profile::Profile;
@@ -7,10 +7,13 @@ use notify::{Event, EventKind};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs;
+use tokio::io::{BufReader};
+use tokio::io::AsyncReadExt;
+use sha2::{Digest, Sha256};
 
 pub struct ProfileHandler {
     path: PathBuf,
-    profiles: HashMap<PathBuf, (Profile, WatcherLoop)>,
+    profiles: HashMap<PathBuf, (Option<String>, Option<WatcherLoop>)>,
 }
 
 impl ProfileHandler {
@@ -34,20 +37,31 @@ impl ProfileHandler {
         Ok(())
     }
 
+    async fn make_watcher_loop(path: PathBuf) -> Result<(String, WatcherLoop)> {
+        let hash = compute_file_hash(&path).await?;
+        let profile = Profile::new_from_file(path.clone()).await?;
+        log::info!("Starting watcher on {:?}", profile.paths.path);
+        let inbox_path = profile.paths.make_root(Location::Inbox);
+        let handler = Handler::new(profile.clone(), 4).await?;
+        let watcher_loop = WatcherLoop::new(inbox_path, handler).await?;
+
+        Ok((hash, watcher_loop))
+    }
+
     async fn handle_profile(&mut self, path: PathBuf, event: EventKind) -> Result<()> {
         if self.profiles.contains_key(&path) {
             match event {
-                EventKind::Create(_) | EventKind::Modify(_) => {
-                    let profile = Profile::new_from_file(path.clone()).await?;
-                    let (running_profile, _) = self.profiles.get(&path).unwrap();
-                    if *running_profile != profile {
-                        let running_profile = running_profile.clone();
+                EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_) => {
+                    let (hash, _) = self.profiles.get(&path).unwrap();
+                    if *hash != compute_file_hash(&path).await.ok() {
                         let (_, running_loop) = self.profiles.remove(&path).unwrap();
-                        running_loop.shutdown().await.inspect_err(|e| {
-                            log::warn!(
-                                "Cannot shutdown running watcher: {running_profile:?}: {e:?}"
-                            )
-                        })?;
+                        if let Some(running_loop) = running_loop {
+                            running_loop.shutdown().await.inspect_err(|e| {
+                                log::warn!(
+                                    "Cannot shutdown running watcher: {path:?}: {e:?}"
+                                )
+                            })?;
+                        }
                     }
                 }
                 _ => {
@@ -55,15 +69,12 @@ impl ProfileHandler {
                 }
             }
         }
-        if !self.profiles.contains_key(&path) {
-            let profile = Profile::new_from_file(path.clone()).await?;
-            log::info!("Starting watcher on {:?}", profile.paths.path);
-            let inbox_path = profile.paths.make_root(Location::Inbox);
-            let handler = Handler::new(profile.clone(), 4).await?;
-            let watcher_loop = WatcherLoop::new(inbox_path, handler).await?;
-            self.profiles.insert(path, (profile, watcher_loop));
-        } else {
-            log::trace!("Watcher for {path:?} already running");
+        if !self.profiles.contains_key(&path) && path.is_file() {
+            let hash_watcher_loop = ProfileHandler::make_watcher_loop(path.clone())
+                .await
+                .inspect_err(|e| log::error!("Unable to create watcher for {path:?}: {e:?}"))
+                .ok();
+            self.profiles.insert(path, hash_watcher_loop.unzip());
         }
 
         Ok(())
@@ -81,9 +92,7 @@ impl EventHandler for ProfileHandler {
     async fn handle_event(&mut self, event: Event) {
         match event {
             Event { kind, paths, .. } => {
-                let existing_paths: Vec<_> =
-                    paths.into_iter().filter(|path| path.is_file()).collect();
-                for path in existing_paths {
+                for path in paths {
                     self.handle_profile(path.clone(), kind)
                         .await
                         .inspect_err(|e| log::error!("Unable to run profile: {path:?}: {e:?}"))
@@ -92,4 +101,21 @@ impl EventHandler for ProfileHandler {
             }
         };
     }
+}
+
+async fn compute_file_hash(path: &PathBuf) -> Result<String> {
+    let file = fs::File::open(path).await?;
+    let mut reader = BufReader::new(file);
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 4096];
+    loop {
+        let bytes_read = reader.read(&mut buffer).await?;
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
+    }
+    let result = hasher.finalize();
+
+    Ok(format!("{:x}", result))
 }

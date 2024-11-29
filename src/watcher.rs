@@ -77,6 +77,7 @@ impl WatcherLoop {
 
         log::debug!("Waiting for profile to stop");
         event_handler.on_stop().await;
+        log::debug!("Profile stopped");
 
         result
     }
