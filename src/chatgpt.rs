@@ -34,6 +34,10 @@ fn default_tools() -> Vec<Tool> {
                         "type": "string",
                         "description": "The class you assigned to the document"
                     },
+                    "source": {
+                        "type": "string",
+                        "description": "The source you assigned to the document"
+                    },
                     "keywords": {
                         "type": "array",
                         "items": { "type": "string" },
@@ -74,13 +78,16 @@ fn default_instructions() -> Vec<ChatCompletionMessage> {
             Please use rather broad and general concepts as classes. \
             The class must be usable as part of a filename and must not contain whitespaces or non-ascii characters. \
             The grammatical number of the word used as class should be singular if possible. \n\
-            (4) Between 2 and 5 keywords describing the content of the document. \
+            (4) The source of the document. \
+            This could be the author, creator, sender or issuer of the document. \n\
+            (5) Between 2 and 5 keywords describing the content of the document. \
             The class of the document should be one the keywords. \n\
-            (5) A title describing the document. \
+            (6) A title describing the document. \
             It should be sufficiently specific to differentiate \
-            this particular document from other documents of this class or with similar keywords. \
+            this particular document from other documents of this class and source, \
+            but it should not duplicate the class or source. \
             The title must be usable as part of a filename and must not contain whitespaces or non-ascii characters. \n\
-            (6) A date to be associated with the document.\n
+            (7) A date to be associated with the document.\n
             All output shall be in the language of the document.\n"
     })).unwrap()]
 }
