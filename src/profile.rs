@@ -66,7 +66,7 @@ impl Profile {
         log::debug!("Creating config dir {:?}", path);
         fs::create_dir_all(path.clone()).await?;
         let filepath = path.join(format!("{}.yaml", self.name));
-        let file = fs::File::create_new(filepath).await;
+        let file = fs::File::create(filepath).await;
 
         match file {
             Err(err) if err.kind() != ErrorKind::AlreadyExists => Err(Error::from(err)),
