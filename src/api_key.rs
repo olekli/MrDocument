@@ -1,11 +1,12 @@
 use once_cell::sync::OnceCell;
 use crate::error::{Error, Result};
 use std::env;
+use crate::profile::Profile;
 
 static OPENAI_API_KEY: OnceCell<String> = OnceCell::new();
 
 pub fn init() -> Result<()> {
-    let config_dir = dirs::config_local_dir().ok_or(Error::SkelError)?;
+    let config_dir = Profile::get_config_dir()?;
     OPENAI_API_KEY.set(
         env::var("OPENAI_API_KEY")
             .map(|key| key.to_string())

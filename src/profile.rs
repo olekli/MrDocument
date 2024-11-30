@@ -76,8 +76,14 @@ impl Profile {
     }
 
     pub fn get_profile_dir() -> Result<PathBuf> {
+        let path = Profile::get_config_dir()?.join("profile");
+
+        Ok(path)
+    }
+
+    pub fn get_config_dir() -> Result<PathBuf> {
         let config_dir = dirs::config_local_dir().ok_or(Error::SkelError)?;
-        let path = config_dir.join("MrDocument").join("profile");
+        let path = config_dir.join("MrDocument");
 
         Ok(path)
     }
