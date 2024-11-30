@@ -52,7 +52,7 @@ async fn setup_mrdocument_service(
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>{pdftoppm_path}:{pdftk_path}/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <string>{pdftoppm_path}:{pdftk_path}:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
 
     <key>StandardErrorPath</key>
@@ -101,7 +101,7 @@ async fn setup_mrdocument_service(
         .into());
     }
 
-    println!("Service com.drrust.mrdocument has been set up and launched.");
+    println!("Service com.olekli.mrdocument has been set up and launched.");
 
     Ok(())
 }
