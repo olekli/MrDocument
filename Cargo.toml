@@ -14,6 +14,7 @@ clap = { version = "4.5.21", features = ["derive"] }
 dirs = "5.0.1"
 display_json = "0.2.1"
 env_logger = "0.11.5"
+filetime = "0.2.25"
 fmt = "0.1.0"
 futures = "0.3.31"
 futures-util = "0.3.31"

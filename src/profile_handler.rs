@@ -10,6 +10,9 @@ use tokio::fs;
 use tokio::io::{BufReader};
 use tokio::io::AsyncReadExt;
 use sha2::{Digest, Sha256};
+use filetime::{FileTime, set_file_times};
+use std::time::SystemTime;
+use tokio::task;
 
 pub struct ProfileHandler {
     path: PathBuf,
@@ -29,10 +32,7 @@ impl ProfileHandler {
         let mut dir_entries = fs::read_dir(self.path.clone()).await?;
         while let Some(entry) = dir_entries.next_entry().await? {
             let entry_path = entry.path();
-            let metadata = entry.metadata().await?;
-            if metadata.is_file() {
-                let _file = fs::File::open(entry_path).await?;
-            }
+            touch_file(entry_path).await?;
         }
         Ok(())
     }
@@ -118,4 +118,15 @@ async fn compute_file_hash(path: &PathBuf) -> Result<String> {
     let result = hasher.finalize();
 
     Ok(format!("{:x}", result))
+}
+
+async fn touch_file(path: PathBuf) -> Result<()> {
+    let metadata = fs::metadata(&path).await?;
+    let mtime = FileTime::from_last_modification_time(&metadata);
+    let atime = FileTime::from_system_time(SystemTime::now());
+    task::spawn_blocking(move || {
+        set_file_times(&path, atime, mtime)
+    }).await??;
+
+    Ok(())
 }
