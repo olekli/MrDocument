@@ -36,6 +36,8 @@ pub struct Profile {
     #[serde(default)]
     pub chatgpt: ChatGptProfile,
     pub paths: Paths,
+    #[serde(default)]
+    pub polling: bool,
 }
 
 impl Default for Profile {
@@ -44,6 +46,7 @@ impl Default for Profile {
             name: "default".to_string(),
             chatgpt: ChatGptProfile::default(),
             paths: Paths::default(),
+            polling: false,
         }
     }
 }
@@ -55,9 +58,8 @@ impl Profile {
 
     pub fn with_path(self, path: PathBuf) -> Profile {
         Profile {
-            name: self.name,
-            chatgpt: self.chatgpt,
             paths: self.paths.with_path(path),
+            ..self
         }
     }
 

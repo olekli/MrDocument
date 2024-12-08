@@ -42,7 +42,7 @@ async fn main_log() -> Result<()> {
     let path = PathBuf::from(args.path.clone()).canonicalize()?;
 
     log::info!("Watching {:?}", path);
-    let watcher_loop = WatcherLoop::new(path, Handler{}).await?;
+    let watcher_loop = WatcherLoop::new(path, Handler{}, true).await?;
 
     Ok(watcher_loop.wait().await?)
 }

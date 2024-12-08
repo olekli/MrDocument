@@ -13,7 +13,6 @@ use tokio::task::JoinSet;
 use tokio::time::{sleep, Duration};
 use notify::{Event, EventKind};
 use notify::event::CreateKind;
-use crate::util::file_exists;
 use std::future::Future;
 use std::marker::Send;
 
@@ -33,13 +32,13 @@ impl EventHandler for Handler {
     async fn handle_event(&mut self, event: Event) {
         match event {
             Event {
-                kind: EventKind::Create(CreateKind::File),
+                kind: EventKind::Create(CreateKind::Any),
                 paths,
                 ..
             } => {
                 let existing_paths: Vec<_> = paths
                     .into_iter()
-                    .filter(|path| file_exists(&path))
+                    .filter(|path| path.is_file())
                     .collect();
                 for path in existing_paths {
                     self.handle_file(path).await;
