@@ -70,26 +70,29 @@ fn default_instructions() -> Vec<ChatCompletionMessage> {
         "role": "system",
         "content": "You will be given a scan of a document. \
             It may consist of one or more pages. \
-            You shall provide as output in the language of the document: \n\
+            You shall provide as output in the language of the document:\n\
             (1) A transcription of the contents of the document. \
             If the document is too large to provide a full transcription, \
-            you may omit this. \n\
-            (2) A summary of the content of the entire document. \n\
+            you may omit this.\n\
+            (2) A summary of the content of the entire document.\n\
             (3) A classification of the document. \
             Please use rather broad and general concepts as classes. \
             The class must be usable as part of a filename and must not contain whitespaces or non-ascii characters. \
             The grammatical number of the word used as class should be singular if possible. \n\
             (4) The source of the document. \
-            This could be the author, creator, sender or issuer of the document. \n\
-            The source must be usable as part of a filename and must not contain whitespaces or non-ascii characters. \n\
-            (5) Between 2 and 4 keywords describing the content of the document. \n\
+            This could be the author, creator, sender or issuer of the document.\n\
+            The source must be usable as part of a filename and must not contain whitespaces or non-ascii characters.\n\
+            (5) Between 2 and 4 keywords describing the content of the document.\n\
             (6) A title describing the document. \
             It should be sufficiently specific to differentiate \
             this particular document from other documents of this class and source, \
             but it should not duplicate words that are already found as class or source. \
-            The title must be usable as part of a filename and must not contain whitespaces or non-ascii characters. \n\
+            The title must be usable as part of a filename and must not contain whitespaces or non-ascii characters.\n\
             (7) A date to be associated with the document. \
-            Please favor the date when the document was issued over any other dates found.\n"
+            Please favor the date when the document was issued \
+            over any other dates found.\n\n\
+            Finally, please make sure that the language of the output \
+            matches the language of the input document.\n"
     })).unwrap()]
 }
 
