@@ -1,3 +1,4 @@
+use crate::error::{Result};
 use crate::util::make_unique_path;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -64,7 +65,7 @@ impl Paths {
         self.path.clone().join(self.get_location_name(location))
     }
 
-    pub async fn make_path_with_filename(&self, location: Location, filename: String) -> PathBuf {
+    pub async fn make_path_with_filename(&self, location: Location, filename: String) -> Result<PathBuf> {
         make_unique_path(self.make_root(location), filename).await
     }
 

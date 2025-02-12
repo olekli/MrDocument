@@ -1,5 +1,6 @@
 use display_json::DisplayAsJsonPretty;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, DisplayAsJsonPretty)]
 pub struct DocumentData {
@@ -14,6 +15,10 @@ pub struct DocumentData {
 
 impl DocumentData {
     pub fn make_filename(&self, suffix: &str) -> String {
-        format!("{}-{}-{}-{}.{}", self.date, self.class.to_lowercase(), self.source.to_lowercase(), self.title, suffix)
+        format!("{}-{}.{}", self.date, self.title, suffix)
+    }
+
+    pub fn make_path(&self) -> PathBuf {
+        PathBuf::from(format!("{}/{}", self.class.to_lowercase(), self.source.to_lowercase()))
     }
 }

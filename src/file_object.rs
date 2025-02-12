@@ -41,9 +41,10 @@ impl FileObject {
     pub async fn make_path_with_new_filename(
         &self,
         location: Location,
+        path: PathBuf,
         filename: String,
-    ) -> PathBuf {
-        make_unique_path(self.paths.make_root(location), filename).await
+    ) -> Result<PathBuf> {
+        Ok(make_unique_path(self.paths.make_root(location).join(path), filename).await?)
     }
 
     pub fn get_path(&self) -> PathBuf {

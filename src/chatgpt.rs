@@ -140,6 +140,7 @@ pub async fn query_ai(profile: ChatGptProfile, file_info: FileInfo) -> Result<Do
         .tool_choice(ToolChoiceType::Required);
     log::info!("Sending {file_info:?}");
     let response = client.chat_completion(req).await?;
+    log::trace!("received response");
     let result_value: Result<serde_json::Value> = (|| {
         Ok(serde_json::from_str(
             &response

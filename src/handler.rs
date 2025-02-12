@@ -5,21 +5,28 @@ use crate::file_object::FileObject;
 use crate::paths::Location;
 use crate::pdf::update_metadata;
 use crate::profile::Profile;
+use notify::event::CreateKind;
+use notify::{Event, EventKind};
+use std::future::Future;
+use std::marker::Send;
 use std::path::PathBuf;
 use tokio::fs;
 use tokio::fs::create_dir_all;
 use tokio::io::AsyncWriteExt;
 use tokio::task::JoinSet;
 use tokio::time::{sleep, Duration};
-use notify::{Event, EventKind};
-use notify::event::CreateKind;
-use std::future::Future;
-use std::marker::Send;
 
 pub trait EventHandler: Send + 'static {
     fn handle_event(&mut self, event: Event) -> impl Future<Output = ()> + Send;
-    fn on_start(&mut self) -> impl Future<Output = ()> + Send { async {} }
-    fn on_stop(self) -> impl Future<Output = ()> + Send where Self: Sized { async {} }
+    fn on_start(&mut self) -> impl Future<Output = ()> + Send {
+        async {}
+    }
+    fn on_stop(self) -> impl Future<Output = ()> + Send
+    where
+        Self: Sized,
+    {
+        async {}
+    }
 }
 
 pub struct Handler {
@@ -35,11 +42,14 @@ impl EventHandler for Handler {
                 kind: EventKind::Create(CreateKind::Any),
                 paths,
                 ..
+            }
+            | Event {
+                kind: EventKind::Create(CreateKind::File),
+                paths,
+                ..
             } => {
-                let existing_paths: Vec<_> = paths
-                    .into_iter()
-                    .filter(|path| path.is_file())
-                    .collect();
+                let existing_paths: Vec<_> =
+                    paths.into_iter().filter(|path| path.is_file()).collect();
                 for path in existing_paths {
                     self.handle_file(path).await;
                 }
@@ -123,8 +133,12 @@ impl Handler {
         let file_info = FileInfo::new(file.get_path())?;
         let document_data = query_ai(profile.chatgpt, file_info).await?;
         let dst_path_pdf = file
-            .make_path_with_new_filename(Location::Outbox, document_data.make_filename("pdf"))
-            .await;
+            .make_path_with_new_filename(
+                Location::Outbox,
+                document_data.make_path(),
+                document_data.make_filename("pdf"),
+            )
+            .await?;
         update_metadata(file.get_path(), dst_path_pdf, &document_data)
             .await
             .map(|_| ())?;
@@ -133,18 +147,20 @@ impl Handler {
             let content_path = file
                 .make_path_with_new_filename(
                     Location::Outbox,
+                    document_data.make_path(),
                     document_data.make_filename("content"),
                 )
-                .await;
+                .await?;
             let mut out = fs::File::create(content_path).await?;
             out.write_all(content.as_bytes()).await?;
         }
         let summary_path = file
             .make_path_with_new_filename(
                 Location::Outbox,
+                document_data.make_path(),
                 document_data.make_filename("summary"),
             )
-            .await;
+            .await?;
         let mut out = fs::File::create(summary_path).await?;
         out.write_all(document_data.summary.as_bytes()).await?;
 
