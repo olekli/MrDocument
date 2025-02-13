@@ -131,7 +131,8 @@ impl Handler {
         file.rename(Location::Transit).await?;
 
         let file_info = FileInfo::new(file.get_path())?;
-        let document_data = query_ai(profile.chatgpt, file_info).await?;
+        let (classes, sources) = Handler::determine_classes_sources(&profile).await?;
+        let document_data = query_ai(profile.chatgpt, file_info, classes, sources).await?;
         let dst_path_pdf = file
             .make_path_with_new_filename(
                 Location::Outbox,
@@ -167,6 +168,36 @@ impl Handler {
         file.rename(Location::Processed).await?;
 
         Ok(())
+    }
+
+    async fn determine_classes_sources(profile: &Profile) -> Result<(Vec<String>, Vec<String>)> {
+        let path = profile.paths.make_root(Location::Outbox);
+        let mut first_level_dirs = Vec::new();
+        let mut second_level_dirs = Vec::new();
+
+        let mut entries = fs::read_dir(&path).await?;
+        while let Some(entry) = entries.next_entry().await? {
+            let dir_path = entry.path();
+            let metadata = entry.metadata().await?;
+            if metadata.is_dir() {
+                if let Some(dir_name) = dir_path.file_name() {
+                    first_level_dirs.push(dir_name.to_string_lossy().into_owned());
+                }
+
+                let mut sub_entries = fs::read_dir(&dir_path).await?;
+                while let Some(sub_entry) = sub_entries.next_entry().await? {
+                    let sub_dir_path = sub_entry.path();
+                    let sub_metadata = sub_entry.metadata().await?;
+                    if sub_metadata.is_dir() {
+                        if let Some(sub_dir_name) = sub_dir_path.file_name() {
+                            second_level_dirs.push(sub_dir_name.to_string_lossy().into_owned());
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok((first_level_dirs, second_level_dirs))
     }
 
     async fn wait_for_document(file: &FileObject) -> Result<()> {
