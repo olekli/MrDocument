@@ -11,7 +11,9 @@ async fn setup_mrdocument_service(
     api_key: PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir_all(install_path.clone())?;
-    let config_dir = dirs::config_local_dir().ok_or("Cannot determine config dir")?.join("MrDocument");
+    let config_dir = dirs::config_local_dir()
+        .ok_or("Cannot determine config dir")?
+        .join("MrDocument");
     let home_dir = dirs::home_dir().ok_or("Could not determine home directory")?;
     let api_key_string = std::fs::read_to_string(api_key)?;
     let pdftoppm_path = which("pdftoppm")

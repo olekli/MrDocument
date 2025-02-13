@@ -1,8 +1,8 @@
-use crate::error::{Result, Error};
-use tokio::fs;
+use crate::error::{Error, Result};
 use std::path::PathBuf;
-use uuid::Uuid;
+use tokio::fs;
 use tokio::fs::create_dir_all;
+use uuid::Uuid;
 
 pub fn file_exists(path: &PathBuf) -> bool {
     if let Ok(exists) = std::fs::exists(&path) {
@@ -26,7 +26,9 @@ pub async fn make_unique_path(path: PathBuf, filename: String) -> Result<PathBuf
         if let Ok(_) = fs::File::create_new(path.join(filename.clone())).await {
             Ok(path.join(filename))
         } else {
-            Err(Error::UnexpectedError("Cannot find unique filename".to_string()))
+            Err(Error::UnexpectedError(
+                "Cannot find unique filename".to_string(),
+            ))
         }
     } else {
         Ok(path.join(filename))

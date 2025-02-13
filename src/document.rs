@@ -19,6 +19,10 @@ impl DocumentData {
     }
 
     pub fn make_path(&self) -> PathBuf {
-        PathBuf::from(format!("{}/{}", self.class.to_lowercase(), self.source.to_lowercase()))
+        PathBuf::from(format!(
+            "{}/{}",
+            self.class.to_lowercase(),
+            self.source.to_lowercase()
+        ))
     }
 }

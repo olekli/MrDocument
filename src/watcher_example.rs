@@ -1,11 +1,11 @@
 use clap::Parser;
 use env_logger;
 use env_logger::{Builder, Env};
-use mrdocument::error::{Result};
+use mrdocument::error::Result;
 use mrdocument::handler::EventHandler;
+use mrdocument::watcher::WatcherLoop;
 use notify::Event;
 use std::path::PathBuf;
-use mrdocument::watcher::WatcherLoop;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -27,8 +27,7 @@ async fn main() -> Result<()> {
     result
 }
 
-struct Handler {
-}
+struct Handler {}
 
 impl EventHandler for Handler {
     async fn handle_event(&mut self, event: Event) {
@@ -36,13 +35,12 @@ impl EventHandler for Handler {
     }
 }
 
-
 async fn main_log() -> Result<()> {
     let args = Cli::parse();
     let path = PathBuf::from(args.path.clone()).canonicalize()?;
 
     log::info!("Watching {:?}", path);
-    let watcher_loop = WatcherLoop::new(path, Handler{}, true).await?;
+    let watcher_loop = WatcherLoop::new(path, Handler {}, true).await?;
 
     Ok(watcher_loop.wait().await?)
 }

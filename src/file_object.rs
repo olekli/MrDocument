@@ -1,9 +1,9 @@
 use crate::error::{Error, Result};
+use crate::paths::{Location, Paths};
 use crate::util::file_exists;
 use crate::util::{make_unique_path, move_file};
 use std::ffi::OsString;
 use std::path::PathBuf;
-use crate::paths::{Location, Paths};
 use strum::IntoEnumIterator;
 
 #[derive(Clone, Debug)]

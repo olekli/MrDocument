@@ -62,7 +62,8 @@ fn default_tools() -> Vec<Tool> {
                 ]
             }
         }
-    })).unwrap()]
+    }))
+    .unwrap()]
 }
 
 fn default_instructions() -> Vec<ChatCompletionMessage> {

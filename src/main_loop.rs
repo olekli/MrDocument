@@ -1,6 +1,6 @@
 use crate::error::Result;
-use crate::watcher::WatcherLoop;
 use crate::profile_handler::ProfileHandler;
+use crate::watcher::WatcherLoop;
 use std::path::PathBuf;
 
 pub async fn run_main_loop(path: PathBuf) -> Result<()> {

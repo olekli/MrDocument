@@ -1,17 +1,17 @@
-use crate::error::{Result};
+use crate::error::Result;
 use crate::handler::{EventHandler, Handler};
 use crate::paths::Location;
 use crate::profile::Profile;
 use crate::watcher::WatcherLoop;
+use filetime::{set_file_times, FileTime};
 use notify::{Event, EventKind};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use tokio::fs;
-use tokio::io::{BufReader};
-use tokio::io::AsyncReadExt;
-use sha2::{Digest, Sha256};
-use filetime::{FileTime, set_file_times};
 use std::time::SystemTime;
+use tokio::fs;
+use tokio::io::AsyncReadExt;
+use tokio::io::BufReader;
 use tokio::task;
 
 pub struct ProfileHandler {
@@ -57,9 +57,7 @@ impl ProfileHandler {
                         let (_, running_loop) = self.profiles.remove(&path).unwrap();
                         if let Some(running_loop) = running_loop {
                             running_loop.shutdown().await.inspect_err(|e| {
-                                log::warn!(
-                                    "Cannot shutdown running watcher: {path:?}: {e:?}"
-                                )
+                                log::warn!("Cannot shutdown running watcher: {path:?}: {e:?}")
                             })?;
                         }
                     }
@@ -124,9 +122,7 @@ async fn touch_file(path: PathBuf) -> Result<()> {
     let metadata = fs::metadata(&path).await?;
     let mtime = FileTime::from_last_modification_time(&metadata);
     let atime = FileTime::from_system_time(SystemTime::now());
-    task::spawn_blocking(move || {
-        set_file_times(&path, atime, mtime)
-    }).await??;
+    task::spawn_blocking(move || set_file_times(&path, atime, mtime)).await??;
 
     Ok(())
 }

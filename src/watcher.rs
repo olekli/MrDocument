@@ -2,17 +2,17 @@ use crate::error::{Error, Result};
 use crate::handler::EventHandler;
 use futures::stream::SelectAll;
 use notify::{
-    recommended_watcher, Config, Event, PollWatcher, RecursiveMode,
-    Watcher as NotifyWatcher, EventKind, event::{CreateKind},
+    event::CreateKind, recommended_watcher, Config, Event, EventKind, PollWatcher, RecursiveMode,
+    Watcher as NotifyWatcher,
 };
 use std::path::PathBuf;
 use tokio::signal::unix::{signal, SignalKind};
 use tokio::sync::mpsc;
 use tokio::task;
+use tokio::time::Duration;
 use tokio_stream::wrappers::{ReceiverStream, SignalStream};
 use tokio_stream::Stream;
 use tokio_stream::StreamExt;
-use tokio::time::Duration;
 
 pub enum WatcherEvent {
     Event(Event),
@@ -114,14 +114,16 @@ impl Watcher {
                             _ => {}
                         };
                     });
-                }
+                },
             )?);
         } else {
-            watcher = Box::new(recommended_watcher(move |event| match notify_tx.blocking_send(event) {
-                Err(err) => {
-                    log::error!("Cannot send event: {err:?}");
+            watcher = Box::new(recommended_watcher(move |event| {
+                match notify_tx.blocking_send(event) {
+                    Err(err) => {
+                        log::error!("Cannot send event: {err:?}");
+                    }
+                    _ => {}
                 }
-                _ => {}
             })?);
         }
         watcher.watch(&path, RecursiveMode::NonRecursive)?;

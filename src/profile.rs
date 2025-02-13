@@ -1,12 +1,12 @@
+use crate::error::{Error, Result};
+use crate::paths::Paths;
 use openai_api_rs::v1::common::GPT4_O;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::paths::Paths;
-use crate::error::{Error, Result};
+use std::io::ErrorKind;
 use std::path::PathBuf;
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
-use std::io::ErrorKind;
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 pub struct ChatGptProfile {
@@ -73,7 +73,9 @@ impl Profile {
         match file {
             Err(err) if err.kind() != ErrorKind::AlreadyExists => Err(Error::from(err)),
             Err(_) => Ok(()),
-            Ok(mut file) => Ok(file.write_all(serde_yaml::to_string(self)?.as_bytes()).await?),
+            Ok(mut file) => Ok(file
+                .write_all(serde_yaml::to_string(self)?.as_bytes())
+                .await?),
         }
     }
 
