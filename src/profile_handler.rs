@@ -42,7 +42,7 @@ impl ProfileHandler {
         let profile = Profile::new_from_file(path.clone()).await?;
         log::info!("Starting watcher on {:?}", profile.paths.path);
         let inbox_path = profile.paths.make_root(Location::Inbox);
-        let handler = Handler::new(profile.clone(), 4).await?;
+        let handler = Handler::new(profile.clone(), 1).await?;
         let watcher_loop = WatcherLoop::new(inbox_path, handler, profile.polling).await?;
 
         Ok((hash, watcher_loop))
