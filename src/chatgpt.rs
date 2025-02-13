@@ -8,6 +8,7 @@ use openai_api_rs::v1::chat_completion::{
     ChatCompletionMessage, ChatCompletionRequest, MessageRole, Tool, ToolChoiceType,
 };
 use openai_api_rs::v1::chat_completion::{Content, ContentType, ImageUrl, ImageUrlType};
+use tokio::time::{timeout, Duration};
 use serde_json::json;
 
 fn default_tools() -> Vec<Tool> {
@@ -150,7 +151,7 @@ pub async fn query_ai(
         .tools(tools)
         .tool_choice(ToolChoiceType::Required);
     log::info!("Sending {file_info:?}");
-    let response = client.chat_completion(req).await?;
+    let response = timeout(Duration::from_secs(300), client.chat_completion(req)).await??;
     log::trace!("received response");
     let result_value: Result<serde_json::Value> = (|| {
         Ok(serde_json::from_str(

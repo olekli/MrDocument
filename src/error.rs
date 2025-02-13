@@ -69,6 +69,9 @@ pub enum Error {
     #[error("Join task error: {0}")]
     JoinError(#[from] tokio::task::JoinError),
 
+    #[error("Timeout: {0}")]
+    TimeoutError(#[from] tokio::time::error::Elapsed),
+
     #[error("Other error: {0}")]
     Other(String),
 }

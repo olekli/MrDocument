@@ -1,6 +1,6 @@
 [package]
 name = "mrdocument"
-version = "0.5.2"
+version = "0.5.3"
 authors = ["Ole Kliemann <mail@olekliemann.de>"]
 edition = "2021"
 license = "Apache-2.0"
